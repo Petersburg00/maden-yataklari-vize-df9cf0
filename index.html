@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex,nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1a2b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Maden Vize">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Maden Yatakları Vize</title>
 <style>
 :root{
@@ -163,6 +170,60 @@ body .layout.isfs{display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,2
 .lay{padding:.8em;border-radius:8px;text-align:center;font-weight:700;color:#2a1a08}
 @keyframes fin{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
 @media (max-width:700px){.fig{font-size:10px;padding:2%}.g4,.g5{grid-template-columns:repeat(3,1fr)}.rung{grid-template-columns:6em 8em 1fr}}
+/* --- telefon uyumu --- */
+@media (max-width:700px){
+  main{padding:10px 10px 20px}
+  .badge{font-size:14px;top:6px;right:6px;padding:2px 8px}
+  .fig{font-size:11px;padding:3% 3% 4%;overflow-y:auto}
+  .ftitle{padding:0 4.2em}
+  .overlay{padding:14px;gap:8px}
+  .overlay h2{font-size:18px}
+  .overlay p{font-size:13px}
+  .overlay .big{font-size:16px;padding:9px 22px}
+  .subs{font-size:16px;min-height:52px;padding:8px 12px}
+  .layout:not(.mfs) .stage:has(> .fig:not([hidden]), > .overlay:not([hidden])){aspect-ratio:auto;display:block;min-height:56.25vw}
+  .layout:not(.mfs) .stage:has(> .fig:not([hidden]), > .overlay:not([hidden])) > img{position:absolute;inset:0;margin:auto}
+  .layout:not(.mfs) .stage > .fig:not([hidden]),.layout:not(.mfs) .stage > .overlay:not([hidden]){position:relative;inset:auto;min-height:56.25vw}
+}
+@media (max-width:900px){#bWide{display:none}}
+@media (hover:none){.kbd{display:none}}
+/* telefonda tam ekran: video üstte tüm ekran, panel gizli */
+.layout.mfs{position:fixed;inset:0;z-index:50;background:#0e1a2b;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.layout.mfs>aside{display:none}
+.layout.mfs>section{flex:1 1 auto;min-height:0;display:flex}
+.layout.mfs .stagewrap{flex:1 1 auto;display:flex;flex-direction:column;width:100%;border-radius:0;box-shadow:none;background:#0e1a2b;min-height:0}
+.layout.mfs .stage{aspect-ratio:auto;flex:1 1 0;min-height:0}
+.layout.mfs .stage img{width:100%;height:100%;object-fit:contain;background:none}
+.layout.mfs .fig{overflow-y:auto}
+.layout.mfs .subs{min-height:0;font-size:16px;padding:6px 12px}
+.layout.mfs .controls{background:#fff;padding:6px 10px;flex:none}
+.layout.mfs .meta{display:none}
+body.mfs-on{overflow:hidden}
+.layout.mfs #bWide{display:none}
+/* dikey telefonda tam ekran: video üstte, açıklama paneli altta kaydırılabilir */
+@media (orientation:portrait){
+  .layout.mfs{overflow-y:auto;display:block;background:#fff}
+  .layout.mfs>section{display:block;position:sticky;top:0;z-index:2}
+  .layout.mfs .stagewrap{display:block}
+  .layout.mfs .stage{aspect-ratio:16/9;flex:none}
+  .layout.mfs .stage:has(> .fig:not([hidden])){aspect-ratio:auto;display:block;min-height:56.25vw}
+  .layout.mfs .stage:has(> .fig:not([hidden])) > img{position:absolute;inset:0;margin:auto}
+  .layout.mfs .stage > .fig:not([hidden]){position:relative;inset:auto;min-height:56.25vw;overflow:visible}
+  .layout.mfs>aside{display:block;position:static;max-height:none;border-radius:0;box-shadow:none;margin:0}
+}
+@media (max-height:500px){
+  .layout.mfs .controls{padding:4px 8px;gap:4px}
+  .layout.mfs .row{flex-wrap:nowrap;gap:6px}
+  .layout.mfs .ibtn{width:34px;height:34px;font-size:14px}
+  .layout.mfs .ibtn.play{width:40px;height:40px;font-size:16px}
+  .layout.mfs .time{min-width:0;font-size:12px;white-space:nowrap}
+  .layout.mfs .seek{flex:1 1 60px;min-width:60px}
+  .layout.mfs .tbtn{height:34px;padding:0 10px;font-size:13px}
+  .layout.mfs .ctl-sel{padding:4px}
+  .layout.mfs .subs{font-size:14px;padding:4px 10px}
+}
+/* çentikli telefonlar / ana ekrandan açılınca */
+header{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right))}
 </style>
 </head>
 <body>
@@ -478,7 +539,7 @@ function renderResult(){
 }
 
 // ---------- olaylar ----------
-$("btnStart").onclick = () => startNow();
+$("btnStart").onclick = () => { phoneFs(); startNow(); };
 $("bPlay").onclick = toggle; $("bNext").onclick = next; $("bPrev").onclick = prev;
 $("bBack").onclick = () => seekScene(-10); $("bFwd").onclick = () => seekScene(10);
 $("btnEndQuiz").onclick = () => setView("quiz");
@@ -509,16 +570,29 @@ document.addEventListener("keydown", e => {
 // ---------- büyütme: geniş mod + tam ekran ----------
 function fsEl(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
 function exitFs(){ const f = document.exitFullscreen || document.webkitExitFullscreen; if (f) { try { const p = f.call(document); if (p && p.catch) p.catch(()=>{}); } catch(e){} } }
+const isPhone = () => window.matchMedia("(max-width:900px), (pointer:coarse) and (max-height:500px)").matches;
+function fsLabel(on){ $("bFs").classList.toggle("on", on); $("bFs").textContent = on ? "✕ Tam ekrandan çık" : "⛶ Tam ekran"; }
+function setMfs(on){ $("layoutwrap").classList.toggle("mfs", on); document.body.classList.toggle("mfs-on", on); fsLabel(on); }
+function phoneFs(){ if (isPhone() && !$("layoutwrap").classList.contains("mfs")) toggleFs(); }
 function toggleFs(){
+  if (isPhone() || $("layoutwrap").classList.contains("mfs")) {
+    const on = !$("layoutwrap").classList.contains("mfs");
+    setMfs(on);
+    if (on) {
+      const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (f) { try { const p = f.call(el); if (p && p.then) p.then(() => { try { const o = screen.orientation; if (o && o.lock) o.lock("landscape").catch(()=>{}); } catch(e){} }).catch(()=>{}); } catch(e){} }
+    } else if (fsEl()) exitFs();
+    return;
+  }
   if (fsEl()) return exitFs();
   const el = $("layoutwrap"), f = el.requestFullscreen || el.webkitRequestFullscreen;
   if (f) { try { const p = f.call(el); if (p && p.catch) p.catch(()=>{}); } catch(e){} }
 }
 function onFsChange(){
+  if ($("layoutwrap").classList.contains("mfs")) { if (!fsEl()) { try { screen.orientation.unlock(); } catch(e){} } return; }
   const on = fsEl() === $("layoutwrap");
   $("layoutwrap").classList.toggle("isfs", on);
-  $("bFs").classList.toggle("on", on);
-  $("bFs").textContent = on ? "✕ Tam ekrandan çık" : "⛶ Tam ekran";
+  fsLabel(on);
 }
 document.addEventListener("fullscreenchange", onFsChange);
 document.addEventListener("webkitfullscreenchange", onFsChange);
@@ -535,7 +609,10 @@ try { if (localStorage.getItem("chz323-wide") === "1") setWide(true); } catch(e)
 $("credBox").hidden = !(D.credits||[]).length;
 (D.credits||[]).forEach(c=>{const li=document.createElement("li");li.innerHTML='<a href="'+esc(c.source)+'" target="_blank" rel="noopener">'+esc(c.title)+'</a> — '+esc(c.author)+' · '+esc(c.license);$("credits").appendChild(li);});
 function updateStartInfo(){
-  $("startInfo").textContent = "Toplam süre: " + fmt(total) + " · " + list.length + " bölüm · sonunda " + (D.quiz || []).length + " soruluk test. Boşluk: oynat/duraklat · ←/→: 10 sn · Shift+←/→: bölüm · S: altyazı · F: tam ekran · W: geniş mod.";
+  $("startInfo").textContent = "";
+  const a = document.createElement("span"); a.textContent = "Toplam süre: " + fmt(total) + " · " + list.length + " bölüm · sonunda " + (D.quiz || []).length + " soruluk test.";
+  const k = document.createElement("span"); k.className = "kbd"; k.textContent = " Boşluk: oynat/duraklat · ←/→: 10 sn · Shift+←/→: bölüm · S: altyazı · F: tam ekran · W: geniş mod.";
+  $("startInfo").append(a, k);
   $("mVoice").textContent = "Ses: " + D.voice;
 }
 
@@ -545,7 +622,7 @@ try {
   const sv = JSON.parse(localStorage.getItem("chz323-pos") || "null");
   if (sv && byId[sv.id] && (sv.id !== list[0].id || sv.t > 5)) {
     const b = $("btnResume"); b.hidden = false; b.textContent = "↪ Kaldığın yerden devam et: " + byId[sv.id].title + " (" + fmt(sv.t) + ")";
-    b.onclick = () => { if (!allowed(byId[sv.id])) { minStar = 0; $("selStar").value = "0"; rebuild(sv.id); } startNow({ i: list.findIndex(s => s.id === sv.id), t: sv.t }); };
+    b.onclick = () => { phoneFs(); if (!allowed(byId[sv.id])) { minStar = 0; $("selStar").value = "0"; rebuild(sv.id); } startNow({ i: list.findIndex(s => s.id === sv.id), t: sv.t }); };
   }
 } catch(e){}
 // #sahne-id@saniye ile doğrudan bölüme git (duraklatılmış)
