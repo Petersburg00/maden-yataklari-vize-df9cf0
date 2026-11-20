@@ -301,5 +301,6 @@ if (location.search === "?selftest") { window.confirm = () => true; start(); doc
 window.addEventListener("beforeunload", e => { if (tick && !submitted) { e.preventDefault(); e.returnValue = ""; } });
 })();
 </script>
+<script>if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
 </body>
 </html>

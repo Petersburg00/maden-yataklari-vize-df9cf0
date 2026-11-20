@@ -170,6 +170,11 @@ body .layout.isfs{display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,2
 .lay{padding:.8em;border-radius:8px;text-align:center;font-weight:700;color:#2a1a08}
 @keyframes fin{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
 @media (max-width:700px){.fig{font-size:10px;padding:2%}.g4,.g5{grid-template-columns:repeat(3,1fr)}.rung{grid-template-columns:6em 8em 1fr}}
+/* çevrimdışı indirme */
+#btnOff.ok{background:#1b7f4b;border-color:#1b7f4b}
+#btnOff.busy{background:linear-gradient(90deg,#0f6b8f var(--p,0%),#1b2c45 var(--p,0%))}
+.offmsg{max-width:1500px;margin:10px max(10px,calc((100% - 1500px)/2)) 0;padding:10px 14px;background:#fff6dc;border:1px solid #f1d27a;border-radius:10px;font-size:14px;color:#5a4300}
+.offmsg.ok{background:#e8f5ee;border-color:#9fd3b5;color:#1b5e3a}
 /* --- telefon uyumu --- */
 @media (max-width:700px){
   main{padding:10px 10px 20px}
@@ -235,7 +240,9 @@ header{padding-top:max(10px,env(safe-area-inset-top));padding-left:max(18px,env(
   <div class="grp"><button class="btn on" id="btnSubs">Altyazı</button></div>
   <div class="grp"><button class="btn pri" id="btnView">📝 Teste geç</button></div>
   <div class="grp"><a class="btn" href="sinav.html" style="background:var(--star);border-color:var(--star);color:#222;text-decoration:none">🎓 Vize provası</a></div>
+  <div class="grp"><button class="btn" id="btnOff" hidden>⬇ Çevrimdışı indir</button></div>
 </header>
+<div class="offmsg" id="offMsg" hidden></div>
 
 <main id="vid">
   <div class="layout" id="layoutwrap">
@@ -605,6 +612,63 @@ function toggleWide(){ setWide(!document.body.classList.contains("wide")); }
 $("bFs").onclick = toggleFs; $("bWide").onclick = toggleWide;
 $("stage").ondblclick = e => { if (!e.target.closest("button")) toggleFs(); };
 try { if (localStorage.getItem("chz323-wide") === "1") setWide(true); } catch(e){}
+
+// --- çevrimdışı indirme ---
+(function(){
+  if (!("serviceWorker" in navigator) || !window.caches || location.protocol === "file:") return;
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+  const btn = $("btnOff"), msg = $("offMsg"), MEDIA = "maden-media";
+  const MB = b => (b / 1048576).toFixed(0) + " MB";
+  const say = (t, ok) => { msg.textContent = t; msg.hidden = !t; msg.classList.toggle("ok", !!ok); };
+  let list = null, busy = false;
+  async function state(){
+    list = list || await (await fetch("offline-files.json", { cache: "no-cache" })).json();
+    const c = await caches.open(MEDIA);
+    const have = new Set((await c.keys()).map(r => new URL(r.url).pathname));
+    const base = new URL(".", location.href).pathname;
+    const missing = list.media.filter(f => !have.has(base + f.p));
+    return { c, missing, total: list.media.reduce((a, f) => a + f.s, 0) };
+  }
+  async function refresh(){
+    try {
+      const { missing, total } = await state();
+      btn.hidden = false;
+      if (!missing.length) { btn.textContent = "✓ Çevrimdışı hazır"; btn.classList.add("ok"); btn.title = "Anlatım bu cihazda kayıtlı, internetsiz izleyebilirsin."; }
+      else { btn.classList.remove("ok"); btn.textContent = "⬇ Çevrimdışı indir (" + MB(missing.reduce((a, f) => a + f.s, 0)) + ")"; btn.title = "Tüm slayt ve sesleri bu cihaza kaydet (toplam " + MB(total) + ")"; }
+    } catch(e) { /* çevrimdışıyken liste yoksa düğme gizli kalır */ }
+  }
+  btn.onclick = async () => {
+    if (busy) return;
+    if (btn.classList.contains("ok")) { say("Anlatım bu cihazda kayıtlı. İnternet yokken de bu sayfayı açıp izleyebilirsin.", true); return; }
+    busy = true; say("");
+    try {
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+      await navigator.serviceWorker.ready;
+      const { c, missing } = await state();
+      const need = missing.reduce((a, f) => a + f.s, 0); let done = 0, i = 0, fail = 0;
+      btn.classList.add("busy");
+      const show = () => { const p = need ? Math.round(done / need * 100) : 100; btn.style.setProperty("--p", p + "%"); btn.textContent = "İndiriliyor %" + p + " · " + MB(done) + " / " + MB(need); };
+      show();
+      async function worker(){
+        while (i < missing.length) {
+          const f = missing[i++];
+          try { const r = await fetch(f.p, { cache: "no-cache" }); if (r.status !== 200) throw 0; await c.put(f.p, r); done += f.s; }
+          catch(e) { fail++; }
+          show();
+        }
+      }
+      await Promise.all([worker(), worker(), worker(), worker()]);
+      btn.classList.remove("busy");
+      if (fail) say(fail + " dosya indirilemedi. İnternet bağlantını kontrol edip düğmeye tekrar bas; inenler kayıtlı, kaldığı yerden devam eder.");
+      else say("Hazır! Artık internet yokken de bu sayfayı açıp anlatımı izleyebilir ve testleri çözebilirsin.", true);
+    } catch(e) {
+      btn.classList.remove("busy");
+      say(/quota/i.test(String(e && e.name)) ? "Telefonda yeterli boş alan yok (yaklaşık 85 MB gerekiyor)." : "İndirme yarıda kaldı. Tekrar bas, kaldığı yerden devam eder.");
+    }
+    busy = false; refresh();
+  };
+  refresh();
+})();
 
 $("credBox").hidden = !(D.credits||[]).length;
 (D.credits||[]).forEach(c=>{const li=document.createElement("li");li.innerHTML='<a href="'+esc(c.source)+'" target="_blank" rel="noopener">'+esc(c.title)+'</a> — '+esc(c.author)+' · '+esc(c.license);$("credits").appendChild(li);});
