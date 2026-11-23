@@ -1,6 +1,6 @@
 // Çevrimdışı izleme için service worker. VERSION ve SHELL tools/cevrimdisi.py ile güncellenir.
-const VERSION = "05c264bdb9";
-const SHELL = ["./", "apple-touch-icon.png", "data.js", "figs.js", "icon-192.png", "icon-512.png", "index.html", "manifest.webmanifest", "sinav.html", "offline-files.json"];
+const VERSION = "9e38c367eb";
+const SHELL = ["./", "apple-touch-icon.png", "calis-data.js", "calis.html", "data.js", "figs.js", "icon-192.png", "icon-512.png", "index.html", "manifest.webmanifest", "sinav-data.js", "sinav.html", "offline-files.json"];
 const SHELL_CACHE = "maden-shell-" + VERSION;
 const MEDIA_CACHE = "maden-media"; // slayt + ses: kullanıcı "Çevrimdışı indir"e basınca dolar
 
